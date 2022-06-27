@@ -1,4 +1,4 @@
-#**EXPLORING THE BRFSS DATA**#
+**EXPLORING THE BRFSS DATA**
 
 The Behavioural Risk Factor Surveillance System (BRFSS) is a collaborative project between all of the states in the United States (US) and participating US territories and the Center for Disease Control and Prevention (CDC). All 50 states, the District of Columbia, Puerto Rico, and Guam collect data annually and American Samoa, Federated States of Micronesia, and Palau collect survey data over a limited point- in-time (usually one to three months). It is an ongoing surveillance system designed to measure behavioural risk factors for the non-institutionalized adult population (18 years of age and older) residing in the US.
 
