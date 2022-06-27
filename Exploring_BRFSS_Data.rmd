@@ -1,0 +1,293 @@
+---
+title: "Exploring the BRFSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+```
+
+### Load data
+
+
+
+```{r load-data}
+load("brfss2013.RData")
+```
+
+
+
+* * *
+
+## Part 1: Data
+
+
+**About Data**
+
+The Behavioural Risk Factor Surveillance System (BRFSS) is a collaborative project between all of the states in the United States (US) and participating US territories and the Center for Disease Control and Prevention (CDC).  All 50 states, the District of Columbia, Puerto Rico, and Guam collect data annually and American Samoa, Federated States of Micronesia, and Palau collect survey data over a limited point- in-time (usually one to three months). 
+It is an ongoing surveillance system designed to measure behavioural risk factors for the non-institutionalized adult population (18 years of age and older) residing in the US. 
+
+Since 2011, BRFSS conducts both landline telephone- and cellular telephone-based surveys. In conducting the BRFSS landline telephone survey, interviewers collect data from a randomly selected adult in a household. In conducting the cellular telephone version of the BRFSS questionnaire, interviewers collect data from an adult who participates by using a cellular telephone and resides in a private residence or college housing. Health characteristics estimated from the BRFSS pertain to the non-institutionalized adult population, aged 18 years or older, who reside in the US.
+
+
+
+**Generalizability**
+
+As stated by the BRFSS Overview Report from 2013, "Overall, an estimated 97.5% of US households had telephone service in 2012. Telephone coverage varies across states with a range of 95.3% in New Mexico to 98.6% in Connecticut" This shows that most adult US residents have access to telephone and therefore can be reached for the survey. Additionally, the document also states that all states participate in the survey. The data is collected by calling people on their telephone or cell phones at random hence random sampling has been done. All of these points also indicate that we can apply the results of the Exploratory Data Analysis to the Entire US population and hence data can be generalized.
+
+Having said that the collected data can have some bias. One could be Non-Responsive bias as some of the people who were asked to survey might not have responded. Another Bias could be of Convenience Bias as there are people who don't own any form of either telephonic or cellular phones and therefore wouldn't be represented in the survey. 
+
+
+**Causality** 
+
+The data collection of BRFSS process is that of observational type and not an experiment i.e. Data is collected in a way which doesn't affect how the data arise. Hence we cannot prove causality between variables as that is something that can only be done when the process of data collection is done through an experiment. In observational studies we can only assume correlation between variables.
+
+
+**References**  
+
+  + BRFSS Codebook: brfss_codebook.html
+  + BRFSS Overview Document : Overview_2013.pdf
+
+
+* * *
+
+## Part 2: Research questions
+
+**Research question 1:** 
+
+***Is there a correlation between annual income level and number of poor mental health days in a month. And how does it varies with sex?*** 
+
+Generally, we believe that having more money to meet one's needs makes their life easier and a person happier. Through this base analysis we want to get some idea on the relation between mental health and income. 
+
+
+**Research question 2:** 
+
+***Is there a correlation between a person's general health and how much time a person sleeps. How does that vary with sex?***
+
+Generally, we believe that having adequate amount of sleep will contribute to a better health state. Through this analysis we plan to study the effects that average Sleep Time have on Quality of General Health of a person.
+
+**Research question 3:** 
+
+***Is there a correlation between No of Poor Mental Health days/month and Binge Drinking ?***
+
+We often hear that a lot of people who Binge Drink often do so when they are feeling low in their lives. So through this analysis we want to see if there is a correlation between having Poor Mental Health and Binge Drinking. The result of this analysis can further be used for giving us more guidance on how to proceed with this topic. 
+
+
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+**Research question 1:**
+
+*Is there a correlation between annual income level and number of poor mental health days in a month. And how does it varies with sex?*
+
+*Variables Used*
+
++ menthlth : Number Of Days Mental Health Not Good
++ income2 : Income Level
++ sex : Respondents Sex
+ 
+
+```{r}
+# First of all we identify all the columns that we might need for our analysis. 
+survey_variables1 <- c("menthlth",
+                      "sex",
+                      "income2")
+
+# Once done we load the data into another dataframe so that we now have a smaller dataframe to work with. 
+ques1_df <-select(brfss2013, all_of(survey_variables1))
+
+# After this we check total number of missing values (NA). 
+colSums(is.na(ques1_df)) 
+
+# Then we drop the missing values (NA)
+ques1_df <- drop_na(ques1_df)
+
+# We also assign new names for the factor levels of our Ordinal data (Income) to make the data more precise. 
+levels(ques1_df$income2) <- c("< $10k", "< $15k", "< $20k",
+                             "< $25k", "< $30k", "< $35k",
+                             "< $50k", ">= $75k") 
+
+# Then we try to group the data based on Annual Income Level (Ordinal Data).
+# We also calculate average for Poor Mental Health Days (Numerical Data).
+# The table indicates the output.
+ques1_df %>% 
+  group_by(income2) %>% 
+  summarise(avg_poormentalhealth = mean(menthlth))
+
+# Then we plot a graph (Graph 1) for the same to be able to get a visual representation of the trends. 
+ques1_df %>% 
+  group_by(income2) %>% 
+  summarise(avg_poormentalhealth = mean(menthlth))%>% 
+  ggplot(aes(x=income2,y=avg_poormentalhealth)) +
+  geom_col(fill = "light green", width = 0.60) +
+  labs(title = "Graph 1 : Avg Income Levels vs Poor Mental Health Days/Month",
+       x ="Annual Income Levels", 
+       y = "No of Poor Mental Health Days/Month") +
+  theme(plot.title = element_text(size = 10),
+        axis.title = element_text(size = 7),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7))
+```
+
+```{r}
+# Then we finally check how the relationship is when it comes to different sex. (Graph 2)
+ques1_df %>% 
+  group_by(income2, sex) %>% 
+  summarise(avg_poormentalhealth = mean(menthlth)) %>% 
+  ggplot(aes(x=income2,y=avg_poormentalhealth, fill =sex)) +
+  geom_col(width = 0.60, position = position_dodge()) + 
+  labs(title = "Graph 2 : Avg Income Levels vs Poor Mental Health Days/Month",
+       subtitle = "Additionally how it varies based on sex",
+       x ="Annual Income Levels", 
+       y = "No of Poor Mental Health Days/Month") +
+  theme(plot.title = element_text(size = 10),
+        plot.subtitle = element_text(size = 7),
+        axis.title = element_text(size = 7),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7)) +
+  scale_fill_manual(values = c("light blue", "pink"))
+```
+
+***Analysis***
+
+Now coming to our question, is there a correlation between Average Poor Mental Health days and Income ? Based on the Graph 1 we can see that there is a decreasing trend between poor mental health days and increasing income i.e. people who earn less seem to have higher poor mental health days than those who earn more. Since our 3rd variable is sex, in Graph 2 we can also see that on an average women seem to have more No of Poor Mental Health Days than men in all income ranges. Based on this analysis we can draw a conclusion that there seems to be a correlation between Poor Mental Health Days and Income (We can't conclude that Poor mental Health is caused by Income because this is an observational study and not an experiment.)
+
+*** 
+
+**Research question 2:**
+
+*Is there a correlation between a person's general health and how much time a person sleeps. How does that vary with sex?*
+
+*Variables Used*
+
++ genhlth : Number Of Days Mental Health Not Good
++ sleptim1 : How Much Time Do You Sleep 
++ sex : Respondents Sex
+
+```{r}
+# First of all we identify all the columns that we might need for our analysis. 
+survey_variables2 <- c("sex",
+                      "genhlth",
+                      "sleptim1")
+
+# Once done we load the data into another dataframe so that we now have a smaller dataframe to work with. 
+ques2_df <-select(brfss2013, all_of(survey_variables2))
+
+# After this we check total number of missing values (NA). 
+colSums(is.na(ques2_df)) 
+
+# Then we drop the missing values (NA)
+ques2_df <- drop_na(ques2_df)
+
+# Then we try to group the data based on General Health (Ordinal Data). 
+# We also calculate the average for the Sleep Time per day(Numerical Data). 
+ques2_df %>% filter(sleptim1 <=24) %>% 
+  group_by(genhlth) %>% 
+  summarise(avg_sleeptime = mean(sleptim1))
+
+# Then we plot a graph (Graph 1) for the same to be able to get a visual representation of the trends.
+ques2_df %>% 
+  group_by(genhlth) %>% 
+  summarise(avg_sleeptime = mean(sleptim1))%>% 
+  ggplot(aes(x=genhlth,y=avg_sleeptime)) +
+  geom_col(fill = "light green", width = 0.60) +
+  labs(title = "Graph 1 : General Health Quality vs Sleep Time/day",
+       x ="General Health Quality", 
+       y = "Sleep Time in Hrs/day") +
+  theme(plot.title = element_text(size = 10),
+        axis.title = element_text(size = 7),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7))
+```
+
+```{r}
+# Then we finally check how the relationship is when it comes to different sex. (Graph 2)
+ques2_df %>% 
+  group_by(genhlth, sex) %>% 
+  summarise(avg_sleeptime = mean(sleptim1)) %>% 
+  ggplot(aes(x=genhlth,y=avg_sleeptime, fill =sex)) +
+  geom_col(width = 0.60, position = position_dodge()) + 
+  labs(title = "Graph 2 : General Health Quality vs Sleep Time/day",
+       subtitle = "Additionally how it varies based on sex",
+       x ="General Health Quality", 
+       y = "Sleep Time in Hrs/day") +
+  theme(plot.title = element_text(size = 10),
+        plot.subtitle = element_text(size = 7),
+        axis.title = element_text(size = 7),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7)) +
+  scale_fill_manual(values = c("light blue", "pink"))
+```
+
+***Analysis***
+
+Now coming to our question, is there a correlation between General Health and Sleep Time? Based on the Graph 1 and also the table with data, we observe that there is a decreasing trend between Quality of General Health and Average Sleep Time, i.e. the average Sleep Time is higher for people with Better General Health and keeps decreasing as the Quality of Health worsens . These results show that there is a correlation between Good General Health and Increased Average Sleep when it comes to all demographics.  
+
+When we bring sex into question, we observe in Graph 2 that on an average women seem to have a slightly higher average Sleep Time than men when we compare data for people who have Excellent to Very Good General Health. But when we compare data for Fair to Poor General Health we observe that men sleep a little more than women. This shows that there is also a correlation between which sex sleeps better depending upon the Health Quality. But again as this is an observational study we can't conclude that there is a causation. 
+
+***
+
+**Research question 3:**
+
+*Is there a correlation between No of Poor Mental Health days/month and Binge Drinking ?*
+
+*Variables Used*
+
++ menthlth : Number Of Days Mental Health Not Good
++ X_rfbing5 : Binge Drinking Calculated Variable
+
+```{r}
+# First of all we identify all the columns that we might need for our analysis. 
+survey_variables3 <- c("X_rfbing5",
+                      "menthlth")
+
+# Once done we load the data into another dataframe so that we now have a smaller dataframe to work with. 
+ques3_df <-select(brfss2013, all_of(survey_variables3))
+
+# After this we check total number of missing values (NA). 
+colSums(is.na(ques3_df))
+
+# Then we drop the missing values (NA)
+ques3_df <- drop_na(ques3_df)
+
+# Then we try to group the data based on Binge Drinking(Ordinal Data).
+# We also calculate average Poor Mental Health Days (Numerical data)and see the trends.
+ques3_df %>% 
+  group_by(X_rfbing5)  %>% 
+  summarise(avg_mental = mean(menthlth)) 
+
+# Then we plot a graph (Graph 1) for the same to be able to get a visual representation of the trends.
+ques3_df %>% 
+  group_by(X_rfbing5) %>% 
+  summarise(avg_mental = mean(menthlth)) %>% 
+  ggplot(aes(x=X_rfbing5,y=avg_mental)) +
+  geom_bar(stat = "identity", fill = "light green", width = 0.25)  + 
+  labs(title = "Binge Drinker vs Poor Mental Health Days/Month",
+       x ="Binge Drinker", 
+       y = "Poor Mental Health Days/Month") +
+  theme(plot.title = element_text(size = 10),
+        plot.subtitle = element_text(size = 7),
+        axis.title = element_text(size = 7),
+        axis.text.x = element_text(size = 7),
+        axis.text.y = element_text(size = 7))
+```
+
+***Analysis***
+
+Now again coming to our question, is there a correlation between Binge Drinking and Average Poor Mental Health Days? Our analysis shows that people who are Binge Drinkers also seem to have more Poor Mental Health Days (3.92 Poor Mental Health Days on Avg) than those who don’t (3.30 Poor Mental Health Days on Avg). This shows that there definitely seems to be some correlation between a person's Mental Health and their Binge Drinking Habits. 
+
+*** 
+
+
